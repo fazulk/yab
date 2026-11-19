@@ -1599,7 +1599,7 @@ static std::shared_ptr<QueuedKeyboardEvent> TakeKeyboard(Tab& tab, NSEvent* even
   tab.keyboard.erase(tab.keyboard.begin(), std::next(found));
   return entry;
 }
-static NSEvent* DispatchHostedKeyboard(NSEvent* event) {
+static NSEvent* DispatchPageKeyboard(NSEvent* event) {
   Tab* target = nullptr;
 #if YABCORE_EXTENSION_HOOKS
   for (auto& [token, popup] : nativePopupInputs) {
@@ -1608,7 +1608,7 @@ static NSEvent* DispatchHostedKeyboard(NSEvent* event) {
 #endif
   if (!target) {
     for (auto& [id, tab] : tabs) {
-      if (tab.externallyHosted && tab.native == event.window) { target = &tab; break; }
+      if (tab.native == event.window) { target = &tab; break; }
     }
   }
   if (target) {
@@ -2851,7 +2851,7 @@ class App : public CefApp, public CefBrowserProcessHandler {
     if (!wire.Start(socket_)) { fprintf(stderr, "Cannot bind private YabCore socket\n"); QuitOnce(); return; }
     [NSEvent addLocalMonitorForEventsMatchingMask:(NSEventMaskKeyDown | NSEventMaskKeyUp | NSEventMaskFlagsChanged)
       handler:^NSEvent*(NSEvent* event) {
-        return DispatchHostedKeyboard(event);
+        return DispatchPageKeyboard(event);
       }];
     wire.onRequest = Request;
     wire.onShed = [](const std::string& tab, size_t bytes) { ShedPage(tab, bytes); };
